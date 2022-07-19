@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">YuukiPS</string>
+    <string name="CustomServer">Custom server</string>
+    <string name="OfficialServer">Official server</string>
+    <string name="SelectServer">Welcome to YuukiPS</string>
+    <string name="Tips">For first time, please enter the server address and enter the official server to download resources. Then you can enter the private server.</string>
+    <string name="ForcedMode">Forced mode (restart required)</string>
+    <string name="ServerAddressError">Server address error.</string>
+    <string name="Yuuki">Enjoy Private Server Yuuki.me</string>
+    <string name="ProxyList">Only addresses in the proxy list (restart required)</string>
+    <string name="EnableTools">Enable tools</string>
+    <string name="HookConfig">Hook profile? (restart required)</string>
+    <string name="Tips2">Forced mode: Forced replacement of all domain names\nInput server address: </string>
+    <string name="Back">Back</string>
+    <string name="ExitGames">Exit games</string>
+    <string name="Settings">Settings</string>
+    <string name="KeepSSL">Skip SSL certificate check (restart required)</string>
+    <string name="CheckServerStatus">(Click Check server status)</string>
+    <string name="ServerStatus">Server status:</string>
+    <string name="NotInstall"> not Install</string>
+    <string name="GetServerStatusError">Get server status error.</string>
+    <string name="InputSwitch">Input switch</string>
+    <string name="Login">Login</string>
+    <string name="User">User:</string>
+    <string name="Password">Password:</string>
+    <string name="LoginSuccess">Login success. copy token:</string>
+    <string name="LoginFailed">Login failed.</string>
+    <string name="LoginError">Login error.</string>
+    <string name="Tools">Tools</string>
+    <string name="JoinServerError">The force proxy or proxy list has been enabled and cannot enter the official
+        server.
+    </string>
+</resources>
