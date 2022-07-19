@@ -42,48 +42,15 @@ import kotlin.system.exitProcess
 
 
 class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
-    private val regex = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
     private lateinit var server: String
-    private var forceUrl = true
+
     private lateinit var modulePath: String
     private lateinit var moduleRes: XModuleResources
+
     private lateinit var windowManager: WindowManager
-    private var proxyList = false
-    private lateinit var sp: SharedPreferences
-    private val proxyListRegex = arrayListOf(
-        "api-os-takumi.mihoyo.com",
-        "hk4e-api-os-static.mihoyo.com",
-        "hk4e-sdk-os.mihoyo.com",
-        "dispatchosglobal.yuanshen.com",
-        "osusadispatch.yuanshen.com",
-        "account.mihoyo.com",
-        "log-upload-os.mihoyo.com",
-        "dispatchcntest.yuanshen.com",
-        "devlog-upload.mihoyo.com",
-        "webstatic.mihoyo.com",
-        "log-upload.mihoyo.com",
-        "hk4e-sdk.mihoyo.com",
-        "api-beta-sdk.mihoyo.com",
-        "api-beta-sdk-os.mihoyo.com",
-        "cnbeta01dispatch.yuanshen.com",
-        "dispatchcnglobal.yuanshen.com",
-        "cnbeta02dispatch.yuanshen.com",
-        "sdk-os-static.mihoyo.com",
-        "webstatic-sea.mihoyo.com",
-        "webstatic-sea.hoyoverse.com",
-        "hk4e-sdk-os-static.hoyoverse.com",
-        "sdk-os-static.hoyoverse.com",
-        "api-account-os.hoyoverse.com",
-        "hk4e-sdk-os.hoyoverse.com",
-        "overseauspider.yuanshen.com",
-        "gameapi-account.mihoyo.com",
-        "minor-api.mihoyo.com",
-        "public-data-api.mihoyo.com",
-        "uspider.yuanshen.com",
-        "sdk-static.mihoyo.com",
-        "minor-api-os.hoyoverse.com",
-        "log-upload-os.hoyoverse.com"
-    )
+    
+    // TODO: fiter download game data
+    private val regex = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
 
     private val activityList: ArrayList<Activity> = arrayListOf()
     private var activity: Activity
@@ -136,13 +103,15 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
+        
+        // modul patch?
         modulePath = startupParam.modulePath
-        moduleRes = XModuleResources.createInstance(modulePath, null)
-        TrustMeAlready().initZygote(startupParam)
-    }
 
-    private var startForceUrl = false
-    private var startProxyList = false
+        // load res
+        moduleRes = XModuleResources.createInstance(modulePath, null)
+
+        TrustMeAlready().initZygote()
+    }
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
@@ -151,12 +120,8 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
         EzXHelperInit.initHandleLoadPackage(lpparam)
 
-        server = "https://sg.game.yuuki.me"
+        sslHook()
         
-        XposedBridge.log("Hook Start: "+server)
-        BypassSSL()
-        PrivateServer()
-
         findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
         }
@@ -171,33 +136,50 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private fun showDialog() {
         AlertDialog.Builder(activity).apply {
             setCancelable(false)
-            setTitle(moduleRes.getString(R.string.SelectServer))
-            setMessage(moduleRes.getString(R.string.Tips))
+            setTitle("Welcome to YuukiPS")
+            setMessage("To connect with us please select server region and for official servers use Custom Server with blank input, fill in if you want to connect to another server. info: discord.yuuki.me")
 
-            // Private Server: TODO: add patch metadata
+            setView(ScrollView(context).apply {
+
+            addView(EditText(activity).apply {
+
+                val str = ""
+                setText(str.toCharArray(), 0, str.length)
+                addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
+                    override fun onTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
+
+                    @SuppressLint("CommitPrefEdits")
+                    override fun afterTextChanged(p0: Editable) {
+                        server = p0.toString()
+                    }
+                })
+            })
+            
+            })
+
+            // TODO: add patch metadata
+            // TODO: remove patch metadata
+
+            // Yuuki
             setNegativeButton("Singapore") { _, _ ->
-                forceUrl = true
                 server = "https://sg.game.yuuki.me"
-                Toast.makeText(activity, "Welcome to Singapore region", Toast.LENGTH_LONG).show()
+                PrivateServer()
+                Toast.makeText(activity, "Welcome to Singapore Region", Toast.LENGTH_LONG).show()
             }
             setPositiveButton("German") { _, _ ->
-                forceUrl = true
                 server = "https://de.game.yuuki.me"
-                Toast.makeText(activity, "Welcome to German region", Toast.LENGTH_LONG).show()
+                PrivateServer()
+                Toast.makeText(activity, "Welcome to German Region", Toast.LENGTH_LONG).show()
             }
-
-            // Tombol Resmi
-            setNeutralButton(moduleRes.getString(R.string.OfficialServer)) { _, _ ->
-
-                // Matikan proxy
-                forceUrl = false
-                startProxyList = false
+            setNeutralButton("Custom Server") { _, _ ->                
+                if (server != ""){
+                    PrivateServer()
+                    Toast.makeText(activity, "You are currently connected to server: "+server, Toast.LENGTH_LONG).show()
+                }else{
+                    Toast.makeText(activity, "You are currently connected to an official server, use it to download data only.", Toast.LENGTH_LONG).show()
+                }
                 
-                // Hapus Config Server
-                server = ""
-
-                // TODO: remove patch metadata
-                Toast.makeText(activity, "You are currently on official server, it is not ready to login, you are only used to download data.", Toast.LENGTH_LONG).show()
             }
 
         }.show()
@@ -255,7 +237,46 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private lateinit var imageView: ImageView
     private lateinit var mainView: ScrollView
 
-    private fun BypassSSL() {
+    private fun PrivateServer() {
+        findMethod("com.miHoYo.sdk.webview.MiHoYoWebview") { name == "load" && parameterTypes[0] == String::class.java && parameterTypes[1] == String::class.java }.hookBefore {
+            replaceUrl(it, 1)
+        }
+        findAllMethods("android.webkit.WebView") { name == "loadUrl" }.hookBefore {
+            replaceUrl(it, 0)
+        }
+        findAllMethods("android.webkit.WebView") { name == "postUrl" }.hookBefore {
+            replaceUrl(it, 0)
+        }
+
+        findMethod("okhttp3.HttpUrl") { name == "parse" && parameterTypes[0] == String::class.java }.hookBefore {
+            replaceUrl(it, 0)
+        }
+        findMethod("com.combosdk.lib.third.okhttp3.HttpUrl") { name == "parse" && parameterTypes[0] == String::class.java }.hookBefore {
+            replaceUrl(it, 0)
+        }
+
+        findMethod("com.google.gson.Gson") { name == "fromJson" && parameterTypes[0] == String::class.java && parameterTypes[1] == java.lang.reflect.Type::class.java }.hookBefore {
+            replaceUrl(it, 0)
+        }
+        findConstructor("java.net.URL") { parameterTypes[0] == String::class.java }.hookBefore {
+            replaceUrl(it, 0)
+        }
+        findMethod("com.combosdk.lib.third.okhttp3.Request\$Builder") { name == "url" && parameterTypes[0] == String::class.java }.hookBefore {
+            replaceUrl(it, 0)
+        }
+        findMethod("okhttp3.Request\$Builder") { name == "url" && parameterTypes[0] == String::class.java }.hookBefore {
+            replaceUrl(it, 0)
+        }
+    }
+
+    private fun replaceUrl(method: XC_MethodHook.MethodHookParam, args: Int) {
+        val m = regex.matcher(method.args[args].toString())
+        if (m.find()) {
+         method.args[args] = m.replaceAll(server)
+        }
+    }
+
+    private fun sslHook() {
         // OkHttp3 Hook
         findMethodOrNull("com.combosdk.lib.third.okhttp3.OkHttpClient\$Builder") { name == "build" }?.hookBefore {
             it.thisObject.invokeMethod("sslSocketFactory", args(getDefaultSSLSocketFactory()), argTypes(SSLSocketFactory::class.java))
@@ -298,57 +319,4 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
     }
 
-    private fun PrivateServer() {
-        findMethod("com.miHoYo.sdk.webview.MiHoYoWebview") { name == "load" && parameterTypes[0] == String::class.java && parameterTypes[1] == String::class.java }.hookBefore {
-            replaceUrl(it, 1)
-        }
-        findAllMethods("android.webkit.WebView") { name == "loadUrl" }.hookBefore {
-            replaceUrl(it, 0)
-        }
-        findAllMethods("android.webkit.WebView") { name == "postUrl" }.hookBefore {
-            replaceUrl(it, 0)
-        }
-
-        findMethod("okhttp3.HttpUrl") { name == "parse" && parameterTypes[0] == String::class.java }.hookBefore {
-            replaceUrl(it, 0)
-        }
-        findMethod("com.combosdk.lib.third.okhttp3.HttpUrl") { name == "parse" && parameterTypes[0] == String::class.java }.hookBefore {
-            replaceUrl(it, 0)
-        }
-
-        findMethod("com.google.gson.Gson") { name == "fromJson" && parameterTypes[0] == String::class.java && parameterTypes[1] == java.lang.reflect.Type::class.java }.hookBefore {
-            replaceUrl(it, 0)
-        }
-        findConstructor("java.net.URL") { parameterTypes[0] == String::class.java }.hookBefore {
-            replaceUrl(it, 0)
-        }
-        findMethod("com.combosdk.lib.third.okhttp3.Request\$Builder") { name == "url" && parameterTypes[0] == String::class.java }.hookBefore {
-            replaceUrl(it, 0)
-        }
-        findMethod("okhttp3.Request\$Builder") { name == "url" && parameterTypes[0] == String::class.java }.hookBefore {
-            replaceUrl(it, 0)
-        }
-    }
-
-    private fun replaceUrl(method: XC_MethodHook.MethodHookParam, args: Int) {
-        if (!forceUrl && !proxyList) return
-        if (!this::server.isInitialized) return
-        if (server == "") return
-
-        XposedBridge.log("old: " + method.args[args].toString())
-        //if (!sp.getBoolean("HookConfig", false) && method.args[args].toString().startsWith("[{\"area\":")) return
-        if (proxyList) {
-            for (list in proxyListRegex) {
-                for (head in arrayListOf("http://", "https://")) {
-                    method.args[args] = method.args[args].toString().replace(head + list, server)
-                }
-            }
-        } else {
-            val m = regex.matcher(method.args[args].toString())
-            if (m.find()) {
-                method.args[args] = m.replaceAll(server)
-            }
-        }
-        XposedBridge.log("new: " + method.args[args].toString())
-    }
 }

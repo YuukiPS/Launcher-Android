@@ -9,21 +9,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 
 import static de.robv.android.xposed.XposedHelpers.*;
 
-public class TrustMeAlready implements IXposedHookZygoteInit {
+public class TrustMeAlready {
 
     private static final String SSL_CLASS_NAME = "com.android.org.conscrypt.TrustManagerImpl";
     private static final String SSL_METHOD_NAME = "checkTrustedRecursive";
     private static final Class<?> SSL_RETURN_TYPE = List.class;
     private static final Class<?> SSL_RETURN_PARAM_TYPE = X509Certificate.class;
 
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
+    public void initZygote() {
         XposedBridge.log("TrustMeAlready loading...");
         int hookedMethods = 0;
 
