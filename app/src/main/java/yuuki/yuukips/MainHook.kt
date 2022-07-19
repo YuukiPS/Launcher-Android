@@ -111,6 +111,9 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
         moduleRes = XModuleResources.createInstance(modulePath, null)
 
         TrustMeAlready().initZygote()
+
+        // default
+        server = ""
     }
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
