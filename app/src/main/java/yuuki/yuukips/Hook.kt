@@ -206,12 +206,12 @@ class Hook {
 
             // Yuuki
             setNegativeButton("Singapore") { _, _ ->
-                server = "https://sg.game.yuuki.me"
+                server = "https://sg.genshin.ps.yuuki.me"
                 hook()
                 Toast.makeText(activity, "Welcome to Singapore Region", Toast.LENGTH_LONG).show()
             }
             setPositiveButton("German") { _, _ ->
-                server = "https://de.game.yuuki.me"
+                server = "https://eu.genshin.ps.yuuki.me"
                 hook()
                 Toast.makeText(activity, "Welcome to German Region", Toast.LENGTH_LONG).show()
             }
