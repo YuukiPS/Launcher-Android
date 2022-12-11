@@ -46,8 +46,44 @@ import kotlin.system.exitProcess
 
 class Hook {
     private val regex = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
-
+    private val proxyListRegex = arrayListOf(
+        "api-os-takumi.mihoyo.com",
+        "hk4e-api-os-static.mihoyo.com",
+        "hk4e-sdk-os.mihoyo.com",
+        "dispatchosglobal.yuanshen.com",
+        "osusadispatch.yuanshen.com",
+        "account.mihoyo.com",
+        "log-upload-os.mihoyo.com",
+        "dispatchcntest.yuanshen.com",
+        "devlog-upload.mihoyo.com",
+        "webstatic.mihoyo.com",
+        "log-upload.mihoyo.com",
+        "hk4e-sdk.mihoyo.com",
+        "api-beta-sdk.mihoyo.com",
+        "api-beta-sdk-os.mihoyo.com",
+        "cnbeta01dispatch.yuanshen.com",
+        "dispatchcnglobal.yuanshen.com",
+        "cnbeta02dispatch.yuanshen.com",
+        "sdk-os-static.mihoyo.com",
+        "webstatic-sea.mihoyo.com",
+        "webstatic-sea.hoyoverse.com",
+        "hk4e-sdk-os-static.hoyoverse.com",
+        "sdk-os-static.hoyoverse.com",
+        "api-account-os.hoyoverse.com",
+        "hk4e-sdk-os.hoyoverse.com",
+        "overseauspider.yuanshen.com",
+        "gameapi-account.mihoyo.com",
+        "minor-api.mihoyo.com",
+        "public-data-api.mihoyo.com",
+        "uspider.yuanshen.com",
+        "sdk-static.mihoyo.com",
+        "minor-api-os.hoyoverse.com",
+        "log-upload-os.hoyoverse.com"
+    )
+    
     private lateinit var server: String
+
+    private lateinit var portSet: String
 
     private lateinit var modulePath: String
     private lateinit var moduleRes: XModuleResources
@@ -118,165 +154,40 @@ class Hook {
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
     fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (lpparam.packageName != "com.miHoYo.GenshinImpact") return
-
+        if ((lpparam.packageName == "com.miHoYo.GenshinImpact") || (lpparam.packageName == "com.miHoYo.GenshinImpactzex") || (lpparam.packageName == "com.miHoYo.GenshinImpact.Proxy")) {
+            // Continue ???
+        } else {
+            return
+        }
+        
+       
         EzXHelperInit.initHandleLoadPackage(lpparam)
 
+        
+        server = "https://genshin.ps.yuuki.me"
+
+        hook()
+        sslHook()
+
+        XposedBridge.log("Hook Start: "+server)
+        
         findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
         }
+
         findMethod("com.miHoYo.GetMobileInfo.MainActivity") { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
-            showDialog()
+
+            Toast.makeText(activity, "Welcome to YuukiPS", Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, "Don't forget to join our discord.yuuki.me", Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, "Thanks chengecu and Z3RO", Toast.LENGTH_LONG).show()
+
+            sslHook()
+            hook()
         }
     }
 
-    private fun httpUtils(url: String, mode: String = "GET", data: String = "", callback: (HttpURLConnection, String) -> Unit) {
-        var ret: String
-        URL("$server$url").apply {
-            val conn = if (server.startsWith("https")) {
-                (openConnection() as HttpsURLConnection).apply {
-                    sslSocketFactory = getDefaultSSLSocketFactory()
-                    hostnameVerifier = getDefaultHostnameVerifier()
-                }
-            } else {
-                openConnection() as HttpURLConnection
-            }.apply {
-                requestMethod = mode
-                readTimeout = 8000
-                connectTimeout = 8000
-                if (mode == "POST") {
-                    doOutput = true
-                    doInput = true
-                    useCaches = false
-                    outputStream.apply {
-                        write(data.toByteArray())
-                        flush()
-                    }
-                    val input = inputStream
-                    val message = ByteArrayOutputStream()
-
-                    var len: Int
-                    val buffer = ByteArray(1024)
-                    while (input.read(buffer).also { len = it } != -1) {
-                        message.write(buffer, 0, len)
-                    }
-                    input.close()
-                    message.close()
-                    ret = String(message.toByteArray())
-                } else {
-                    val response = StringBuilder()
-                    var line = ""
-                    val reader = BufferedReader(InputStreamReader(inputStream))
-                    while (reader.readLine()?.also { line = it } != null) {
-                        response.append(line)
-                    }
-                    ret = response.toString()
-                }
-            }
-            callback(conn, ret)
-        }
-    }
-
-    private fun showDialog() {
-        AlertDialog.Builder(activity).apply {
-            setCancelable(false)
-            setTitle("Welcome to YuukiPS")
-            setMessage("To connect with us please select server region and for official servers use Custom Server with blank input, fill in if you want to connect to another server. info: discord.yuuki.me")
-
-            setView(ScrollView(context).apply {
-
-            addView(EditText(activity).apply {
-                val str = ""
-                setText(str.toCharArray(), 0, str.length)
-                addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
-                    override fun onTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
-                    @SuppressLint("CommitPrefEdits")
-                    override fun afterTextChanged(p0: Editable) {
-                        server = p0.toString()
-                    }
-                })
-            })
-            
-            })
-
-            // TODO: add patch metadata
-            // TODO: remove patch metadata
-
-            // Yuuki
-            setNegativeButton("Singapore") { _, _ ->
-                server = "https://sg.genshin.ps.yuuki.me"
-                hook()
-                Toast.makeText(activity, "Welcome to Singapore Region", Toast.LENGTH_LONG).show()
-            }
-            setPositiveButton("German") { _, _ ->
-                server = "https://eu.genshin.ps.yuuki.me"
-                hook()
-                Toast.makeText(activity, "Welcome to German Region", Toast.LENGTH_LONG).show()
-            }
-            setNeutralButton("Custom Server") { _, _ ->                
-                if (server != ""){
-                    hook()
-                    Toast.makeText(activity, "You are currently connected to server: "+server, Toast.LENGTH_LONG).show()
-                }else{
-                    Toast.makeText(activity, "You are currently connected to an official server, use it to download data only.", Toast.LENGTH_LONG).show()
-                }
-                //activity.finish() // use this to close?                
-            }
-
-        }.show()
-    }
-
-    inner class MoveOnTouchListener : View.OnTouchListener {
-        private var originalXPos = 0
-        private var originalYPos = 0
-
-        private var offsetX = 0f
-        private var offsetY = 0f
-
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouch(v: View, event: MotionEvent): Boolean {
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    val x = event.rawX
-                    val y = event.rawY
-
-                    val location = IntArray(2)
-                    v.getLocationOnScreen(location)
-
-                    originalXPos = location[0]
-                    originalYPos = location[1]
-
-                    offsetX = x - originalXPos
-                    offsetY = y - originalYPos
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val onScreen = IntArray(2)
-                    v.getLocationOnScreen(onScreen)
-
-                    val x = event.rawX
-                    val y = event.rawY
-
-                    val params: WindowManager.LayoutParams = v.layoutParams as WindowManager.LayoutParams
-
-                    val newX = (x - offsetX).toInt()
-                    val newY = (y - offsetY).toInt()
-
-                    if (newX == originalXPos && newY == originalYPos) {
-                        return false
-                    }
-
-                    params.x = newX
-                    params.y = newY
-
-                    windowManager.updateViewLayout(v, params)
-                }
-            }
-            return false
-        }
-    }
-
+    // Bypass HTTPS
     private fun sslHook() {
         // OkHttp3 Hook
         findMethodOrNull("com.combosdk.lib.third.okhttp3.OkHttpClient\$Builder") { name == "build" }?.hookBefore {
@@ -320,6 +231,7 @@ class Hook {
         }
     }
 
+    // Bypass HTTP
     private fun hook() {
         findMethod("com.miHoYo.sdk.webview.MiHoYoWebview") { name == "load" && parameterTypes[0] == String::class.java && parameterTypes[1] == String::class.java }.hookBefore {
             replaceUrl(it, 1)
@@ -352,18 +264,20 @@ class Hook {
         }
     }
 
+    // Rename
     private fun replaceUrl(method: XC_MethodHook.MethodHookParam, args: Int) {
         
         if (server == "") return
         if (method.args[args].toString() == "") return
 
-        //XposedBridge.log("old: " + method.args[args].toString())
-        if (method.args[args].toString().startsWith("[{\"area\":")) return
+        XposedBridge.log("old: " + method.args[args].toString())
 
-        val m = regex.matcher(method.args[args].toString())
-        if (m.find()) {
-         method.args[args] = m.replaceAll(server)
+        for (list in proxyListRegex) {
+            for (head in arrayListOf("http://", "https://")) {
+                method.args[args] = method.args[args].toString().replace(head + list, server)
+            }
         }
-        //XposedBridge.log("new: " + method.args[args].toString())
+
+        XposedBridge.log("new: " + method.args[args].toString())
     }
 }
