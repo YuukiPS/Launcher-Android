@@ -45,40 +45,34 @@ import javax.net.ssl.*
 import kotlin.system.exitProcess
 
 class Hook {
-    private val regex = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
-    private val proxyListRegex = arrayListOf(
-        "api-os-takumi.mihoyo.com",
-        "hk4e-api-os-static.mihoyo.com",
-        "hk4e-sdk-os.mihoyo.com",
-        "dispatchosglobal.yuanshen.com",
-        "osusadispatch.yuanshen.com",
-        "account.mihoyo.com",
-        "log-upload-os.mihoyo.com",
-        "dispatchcntest.yuanshen.com",
-        "devlog-upload.mihoyo.com",
-        "webstatic.mihoyo.com",
-        "log-upload.mihoyo.com",
-        "hk4e-sdk.mihoyo.com",
-        "api-beta-sdk.mihoyo.com",
-        "api-beta-sdk-os.mihoyo.com",
-        "cnbeta01dispatch.yuanshen.com",
+
+    // just for login
+    private val proxyListRegex = arrayListOf( 
+        // CN
         "dispatchcnglobal.yuanshen.com",
-        "cnbeta02dispatch.yuanshen.com",
-        "sdk-os-static.mihoyo.com",
-        "webstatic-sea.mihoyo.com",
-        "webstatic-sea.hoyoverse.com",
-        "hk4e-sdk-os-static.hoyoverse.com",
-        "sdk-os-static.hoyoverse.com",
-        "api-account-os.hoyoverse.com",
-        "hk4e-sdk-os.hoyoverse.com",
-        "overseauspider.yuanshen.com",
         "gameapi-account.mihoyo.com",
+        "hk4e-sdk-s.mihoyo.com",
+        "log-upload.mihoyo.com",
         "minor-api.mihoyo.com",
         "public-data-api.mihoyo.com",
-        "uspider.yuanshen.com",
         "sdk-static.mihoyo.com",
+        "webstatic.mihoyo.com",
+        "user.mihoyo.com",
+        // Global
+        "dispatchosglobal.yuanshen.com",        
+        "api-account-os.hoyoverse.com",
+        "hk4e-sdk-os-s.hoyoverse.com",
+        "hk4e-sdk-os-static.hoyoverse.com",
+        "hk4e-sdk-os.hoyoverse.com",
+        "log-upload-os.hoyoverse.com",
         "minor-api-os.hoyoverse.com",
-        "log-upload-os.hoyoverse.com"
+        "sdk-os-static.hoyoverse.com",
+        "sg-public-data-api.hoyoverse.com",
+        "webstatic.hoyoverse.com",
+        // List Server
+        "osasiadispatch.yuanshen.com",
+        "oseurodispatch.yuanshen.com",
+        "osusadispatch.yuanshen.com"
     )
     
     private lateinit var server: String
@@ -154,37 +148,38 @@ class Hook {
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
     fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if ((lpparam.packageName == "com.miHoYo.GenshinImpact") || (lpparam.packageName == "com.miHoYo.GenshinImpactzex") || (lpparam.packageName == "com.miHoYo.GenshinImpact.Proxy")) {
-            // Continue ???
-        } else {
-            return
+
+        XposedBridge.log("Hi Yuuki")
+        XposedBridge.log("Load: "+lpparam.packageName)
+
+        if (lpparam.packageName == "com.miHoYo.GenshinImpact") {
+            XposedBridge.log("found it")
+            EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
+            server = "https://genshin.ps.yuuki.me" // Change this according to your server
+            tryhook()       
         }
-        
-       
-        EzXHelperInit.initHandleLoadPackage(lpparam)
 
-        
-        server = "https://genshin.ps.yuuki.me"
-
-        hook()
-        sslHook()
-
-        XposedBridge.log("Hook Start: "+server)
-        
         findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
+            XposedBridge.log("activity: "+activity.applicationInfo.name)            
         }
 
         findMethod("com.miHoYo.GetMobileInfo.MainActivity") { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
-
-            Toast.makeText(activity, "Welcome to YuukiPS", Toast.LENGTH_LONG).show()
-            Toast.makeText(activity, "Don't forget to join our discord.yuuki.me", Toast.LENGTH_LONG).show()
-            Toast.makeText(activity, "Thanks chengecu and Z3RO", Toast.LENGTH_LONG).show()
-
-            sslHook()
-            hook()
+            XposedBridge.log("MainActivity")
+            enter()
         }
+    }
+
+    private fun tryhook(){
+        hook()
+        sslHook()        
+    }
+
+    private fun enter(){
+        Toast.makeText(activity, "Welcome to YuukiPS", Toast.LENGTH_LONG).show()
+        Toast.makeText(activity, "Don't forget to join our discord.yuuki.me", Toast.LENGTH_LONG).show()
+        Toast.makeText(activity, "Thanks chengecu and Z3RO", Toast.LENGTH_LONG).show()
     }
 
     // Bypass HTTPS
