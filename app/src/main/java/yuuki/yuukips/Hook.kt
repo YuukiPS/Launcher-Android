@@ -43,6 +43,8 @@ import java.security.cert.X509Certificate
 import java.util.regex.Pattern
 import javax.net.ssl.*
 import kotlin.system.exitProcess
+import android.graphics.Canvas
+import android.graphics.Paint
 
 class Hook {
 
