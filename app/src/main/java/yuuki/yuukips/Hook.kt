@@ -45,6 +45,7 @@ import javax.net.ssl.*
 import kotlin.system.exitProcess
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.PorterDuff
 
 class Hook {
 
@@ -79,6 +80,7 @@ class Hook {
     
     private lateinit var server: String
     private lateinit var showServer: String
+    private lateinit var textJson: String
 
     private lateinit var modulePath: String
     private lateinit var moduleRes: XModuleResources
@@ -158,12 +160,13 @@ class Hook {
             EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
             // json for get server
             val z3ro = File("/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json")
+            textJson = "{\n\t\"server\": \"https://genshin.ps.yuuki.me\",\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
             if (z3ro.exists()) {
                 val z3roJson = JSONObject(z3ro.readText())
                 server = z3roJson.getString("server")
                 XposedBridge.log("server: "+server)
             } else {
-                z3ro.writeText("{\n\t\"server\": \"https://genshin.ps.yuuki.me\",\n\t\"Note\": \"Always use https:// or http, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}")
+                z3ro.writeText(textJson)
                 server = "https://genshin.ps.yuuki.me"
                 XposedBridge.log("server.json not found, created")
             }
@@ -184,12 +187,17 @@ class Hook {
 
     private fun tryhook(){
         hook()
-        sslHook()  
-        showText()      
+        sslHook()
+        val z3ro = File("/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json")
+        val z3roJson = JSONObject(z3ro.readText())
+        if (z3roJson.getString("showText") != "false") {
+            showText()
+        } else {
+            XposedBridge.log("showText: false")
+        }
     }
 
     private fun showText() {
-        // TODO: Make ON/OFF for showing text
         findMethodOrNull("com.miHoYo.GetMobileInfo.MainActivity") { name == "onCreate" }?.hookBefore {
             findMethodOrNull("android.view.View") { name == "onDraw" }?.hookBefore {
                 val canvas = it.args[0] as Canvas
@@ -209,9 +217,17 @@ class Hook {
                 }
                 paint2.textSize = 40f
                 canvas.drawText(showServer, canvas.width / 2f, canvas.height / 2f + 100, paint2)
+                
             }
         }
-        // TODO: Hide the text after in login menu
+        // Broken UHHHHHHHH
+        findMethodOrNull("com.mihoyoos.sdk.platform.SdkActivity") { name == "onCreate" }?.hookBefore {
+            findMethodOrNull("android.view.View") { name == "onDraw" }?.hookBefore {
+                val canvas = it.args[0] as Canvas
+                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+            }
+        }
+        
     }
 
     private fun enter(){
