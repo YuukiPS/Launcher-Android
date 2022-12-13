@@ -157,7 +157,6 @@ class Hook {
             XposedBridge.log("found it")
             EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
             // json for get server
-            // you can change the name of folder
             val z3ro = File("/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json")
             if (z3ro.exists()) {
                 val z3roJson = JSONObject(z3ro.readText())
@@ -169,9 +168,9 @@ class Hook {
                 XposedBridge.log("server: "+server)
             } else {
                 z3ro.writeText("{\n\t\"server\": \"https://genshin.ps.yuuki.me\",\n\t\"Note\": \"Always use https:// or http, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}")
-                XposedBridge.log("z3ro.json not found, created")
+                XposedBridge.log("server.json not found, created")
             }
-            tryhook()     
+            tryhook()       
         }
 
         findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
