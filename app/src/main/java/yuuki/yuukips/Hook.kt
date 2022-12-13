@@ -78,6 +78,7 @@ class Hook {
     private lateinit var server: String
 
     private lateinit var note: String
+    private lateinit var showServer: String
 
     private lateinit var modulePath: String
     private lateinit var moduleRes: XModuleResources
@@ -187,7 +188,34 @@ class Hook {
 
     private fun tryhook(){
         hook()
-        sslHook()        
+        sslHook()  
+        showText()      
+    }
+
+    private fun showText() {
+        // TODO: Make ON/OFF for showing text
+        findMethodOrNull("com.miHoYo.GetMobileInfo.MainActivity") { name == "onCreate" }?.hookBefore {
+            findMethodOrNull("android.view.View") { name == "onDraw" }?.hookBefore {
+                val canvas = it.args[0] as Canvas
+                val paint = Paint()
+                val paint2 = Paint()
+                paint.textAlign = Paint.Align.CENTER
+                paint.color = Color.WHITE
+                paint.textSize = 50f
+                canvas.drawText("YuukiPS", canvas.width / 2f, canvas.height / 2f, paint)
+                paint2.textAlign = Paint.Align.CENTER
+                if (server == "") {
+                    paint2.color = Color.RED
+                    showServer = "You connecting to Official Server"
+                } else {
+                    paint2.color = Color.GREEN
+                    showServer = "Server: $server"
+                }
+                paint2.textSize = 40f
+                canvas.drawText(showServer, canvas.width / 2f, canvas.height / 2f + 100, paint2)
+            }
+        }
+        // TODO: Hide the text after in login menu
     }
 
     private fun enter(){
