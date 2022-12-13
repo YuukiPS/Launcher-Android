@@ -77,7 +77,7 @@ class Hook {
     
     private lateinit var server: String
 
-    private lateinit var portSet: String
+    private lateinit var note: String
 
     private lateinit var modulePath: String
     private lateinit var moduleRes: XModuleResources
@@ -155,8 +155,22 @@ class Hook {
         if (lpparam.packageName == "com.miHoYo.GenshinImpact") {
             XposedBridge.log("found it")
             EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
-            server = "https://genshin.ps.yuuki.me" // Change this according to your server
-            tryhook()       
+            // json for get server
+            // you can change the name of folder
+            val z3ro = File("/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json")
+            if (z3ro.exists()) {
+                val z3roJson = JSONObject(z3ro.readText())
+                server = z3roJson.getString("server")
+                note = z3roJson.getString("Note")
+                if (note != "Always use https:// or http, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443") {
+                    z3ro.writeText("{\n\t\"server\": \"$server\",\n\t\"Note\": \"Always use https:// or http, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}")
+                }
+                XposedBridge.log("server: "+server)
+            } else {
+                z3ro.writeText("{\n\t\"server\": \"https://genshin.ps.yuuki.me\",\n\t\"Note\": \"Always use https:// or http, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}")
+                XposedBridge.log("z3ro.json not found, created")
+            }
+            tryhook()     
         }
 
         findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
