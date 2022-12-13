@@ -164,6 +164,7 @@ class Hook {
                 XposedBridge.log("server: "+server)
             } else {
                 z3ro.writeText("{\n\t\"server\": \"https://genshin.ps.yuuki.me\",\n\t\"Note\": \"Always use https:// or http, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}")
+                server = "https://genshin.ps.yuuki.me"
                 XposedBridge.log("server.json not found, created")
             }
             tryhook()       
