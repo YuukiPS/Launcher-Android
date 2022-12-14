@@ -224,32 +224,38 @@ class Hook {
             setTitle("Change Servers")
             setMessage("Enter Full URL (http://2.0.0.100) or (Just blank/official for official servers) or (yuuki for server yuukips)")
             setView(ScrollView(context).apply {
-
-            addView(EditText(activity).apply {
-                val str = ""
-                setText(str.toCharArray(), 0, str.length)
-                addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
-                    override fun onTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
-                    @SuppressLint("CommitPrefEdits")
-                    override fun afterTextChanged(p0: Editable) {
-                        server = p0.toString()
-                        if(server == "official" || server == "blank"){
-                            server = ""
-                        }else if(server == "yuuki" || server == "yuukips" || server == "melon"){
-                            server = "https://genshin.ps.yuuki.me"
+                addView(EditText(activity).apply {
+                    val str = ""
+                    setText(str.toCharArray(), 0, str.length)
+                    addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
+                        override fun onTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
+                        @SuppressLint("CommitPrefEdits")
+                        override fun afterTextChanged(p0: Editable) {
+                            server = p0.toString()
+                            if (server == "https://" || server == "http://" ) {
+                                server = ""
+                            }
+                            if(server == "official" || server == "blank"){
+                                server = ""
+                            }else if(server == "yuuki" || server == "yuukips" || server == "melon"){
+                                server = "https://genshin.ps.yuuki.me"
+                            }
                         }
-                    }
+                    })
                 })
             })
             
-            })
-            
             setPositiveButton("Save") { _, _ ->
-             val z3ro = File(file_json)
-             z3ro.writeText(TextJSON(server))
-             Toast.makeText(activity, "Changes have been saved, please restart app...", Toast.LENGTH_LONG).show()
-             Runtime.getRuntime().exit(0);
+                if (server == "" ) {
+                    Toast.makeText(activity, "Domain/Server not entered, Cancel", Toast.LENGTH_LONG).show()
+                    showDialog()
+                } else {
+                    val z3ro = File(file_json)
+                    z3ro.writeText(TextJSON(server))
+                    Toast.makeText(activity, "Changes have been saved, please restart app...", Toast.LENGTH_LONG).show()
+                    Runtime.getRuntime().exit(0);
+                }
             }
 
             setNeutralButton("Back") { _, _ ->
