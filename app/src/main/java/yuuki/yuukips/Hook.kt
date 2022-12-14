@@ -233,13 +233,16 @@ class Hook {
                         @SuppressLint("CommitPrefEdits")
                         override fun afterTextChanged(p0: Editable) {
                             server = p0.toString()
-                            if (server == "https://" || server == "http://" ) {
-                                server = ""
-                            }
                             if(server == "official" || server == "blank"){
-                                server = ""
-                            }else if(server == "yuuki" || server == "yuukips" || server == "melon"){
+                                server = "os"
+                            }else if(server == "yuuki" || server == "yuukips" || server == "melon" && server != ""){
                                 server = "https://genshin.ps.yuuki.me"
+                            } else if (server == "https://" || server == "http://" && server != "") {
+                                server = ""
+                            } else if (!server.startsWith("https://") && (!server.startsWith("http://")) && server != "" && server != "official" && server != "blank" && server != "yuuki" && server != "yuukips" && server != "melon") {
+                                server = "https://"+server
+                            } else if (server == "") {
+                                server = ""
                             }
                         }
                     })
@@ -252,6 +255,9 @@ class Hook {
                     showDialog()
                 } else {
                     val z3ro = File(file_json)
+                    if (server == "os") {
+                        server = ""
+                    }
                     z3ro.writeText(TextJSON(server))
                     Toast.makeText(activity, "Changes have been saved, please restart app...", Toast.LENGTH_LONG).show()
                     Runtime.getRuntime().exit(0);
