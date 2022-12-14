@@ -50,6 +50,7 @@ import android.graphics.PorterDuff
 class Hook {
 
     // just for login
+    private val file_json = "/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json"
     private val proxyListRegex = arrayListOf( 
         // CN
         "dispatchcnglobal.yuanshen.com",
@@ -156,20 +157,23 @@ class Hook {
         XposedBridge.log("Load: "+lpparam.packageName)
 
         if (lpparam.packageName == "com.miHoYo.GenshinImpact") {
+
             XposedBridge.log("found it")
             EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
+
             // json for get server
-            val z3ro = File("/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json")
-            textJson = "{\n\t\"server\": \"https://genshin.ps.yuuki.me\",\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
+            val z3ro = File(file_json)
             if (z3ro.exists()) {
                 val z3roJson = JSONObject(z3ro.readText())
                 server = z3roJson.getString("server")
                 XposedBridge.log("server: "+server)
             } else {
-                z3ro.writeText(textJson)
                 server = "https://genshin.ps.yuuki.me"
+                z3ro.writeText(TextJSON(server))
+                
                 XposedBridge.log("server.json not found, created")
             }
+
             tryhook()       
         }
 
@@ -181,14 +185,84 @@ class Hook {
         findMethod("com.miHoYo.GetMobileInfo.MainActivity") { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
             XposedBridge.log("MainActivity")
-            enter()
+            //enter()
+            showDialog()
         }
+    }
+
+    private fun showDialog() {
+        AlertDialog.Builder(activity).apply {
+            setCancelable(false)
+            setTitle("Welcome to Private Server")
+            setMessage("Click continue to play\nClick Change Server to change server location (restart required)\nInfo: discord.yuuki.me")
+
+            setNegativeButton("Continue") { _, _ ->
+
+                /*
+                findMethodOrNull("android.app.AlertDialog\$Builder") { name == "create" }?.hookBefore {
+                    XposedBridge.log("bye")                    
+                    it.result = null
+                }
+                */
+                enter()
+
+            }
+            setNeutralButton("Change Server") { _, _ ->
+                RenameJSON()             
+            }
+
+        }.show()
+    }
+
+    fun TextJSON(melon:String):String{
+        return "{\n\t\"server\": \""+melon+"\",\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
+    }
+
+    private fun RenameJSON(){
+        AlertDialog.Builder(activity).apply {
+            setCancelable(false)
+            setTitle("Change Servers")
+            setMessage("Enter Full URL (http://2.0.0.100) or (Just blank/official for official servers) or (yuuki for server yuukips)")
+            setView(ScrollView(context).apply {
+
+            addView(EditText(activity).apply {
+                val str = ""
+                setText(str.toCharArray(), 0, str.length)
+                addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
+                    override fun onTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
+                    @SuppressLint("CommitPrefEdits")
+                    override fun afterTextChanged(p0: Editable) {
+                        server = p0.toString()
+                        if(server == "official" || server == "blank"){
+                            server = ""
+                        }else if(server == "yuuki" || server == "yuukips" || server == "melon"){
+                            server = "https://genshin.ps.yuuki.me"
+                        }
+                    }
+                })
+            })
+            
+            })
+            
+            setPositiveButton("Save") { _, _ ->
+             val z3ro = File(file_json)
+             z3ro.writeText(TextJSON(server))
+             Toast.makeText(activity, "Changes have been saved, please restart app...", Toast.LENGTH_LONG).show()
+             Runtime.getRuntime().exit(0);
+            }
+
+            setNeutralButton("Back") { _, _ ->
+                showDialog()
+            }
+
+        }.show()
     }
 
     private fun tryhook(){
         hook()
         sslHook()
-        val z3ro = File("/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json")
+        val z3ro = File(file_json)
         val z3roJson = JSONObject(z3ro.readText())
         if (z3roJson.getString("showText") != "false") {
             showText()
@@ -319,7 +393,7 @@ class Hook {
         if (server == "") return
         if (method.args[args].toString() == "") return
 
-        XposedBridge.log("old: " + method.args[args].toString())
+        //XposedBridge.log("old: " + method.args[args].toString())
 
         for (list in proxyListRegex) {
             for (head in arrayListOf("http://", "https://")) {
@@ -327,6 +401,6 @@ class Hook {
             }
         }
 
-        XposedBridge.log("new: " + method.args[args].toString())
+        //XposedBridge.log("new: " + method.args[args].toString())
     }
 }
