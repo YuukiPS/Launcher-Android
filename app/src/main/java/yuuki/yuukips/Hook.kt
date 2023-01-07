@@ -50,7 +50,9 @@ import android.graphics.PorterDuff
 class Hook {
 
     // just for login
-    private val file_json = "/sdcard/Android/data/com.miHoYo.GenshinImpact/files/server.json"
+    private val package_apk = "com.miHoYo.YuukiPS"
+    private val path = "/sdcard/Android/data/${package_apk}"
+    private val file_json = "${path}/files/server.json"
     private val proxyListRegex = arrayListOf( 
         // CN
         "dispatchcnglobal.yuanshen.com",
@@ -78,6 +80,8 @@ class Hook {
         "oseurodispatch.yuanshen.com",
         "osusadispatch.yuanshen.com"
     )
+    public val z3ro = File(file_json)
+    public val z3roJson = JSONObject(z3ro.readText())
     
     private lateinit var server: String
     private lateinit var showServer: String
@@ -156,7 +160,7 @@ class Hook {
         XposedBridge.log("Hi Yuuki")
         XposedBridge.log("Load: "+lpparam.packageName)
 
-        if (lpparam.packageName == "com.miHoYo.GenshinImpact") {
+        if (lpparam.packageName == "${package_apk}") {
 
             XposedBridge.log("found it")
             EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
@@ -191,6 +195,14 @@ class Hook {
     }
 
     private fun showDialog() {
+        // remove folders if exist
+        if (z3roJson.getString("remove_il2cpp_folders") != "false") {
+            val foldersPath = "${path}/files/il2cpp"
+            val folders = File(foldersPath)
+            if (folders.exists()) {
+                folders.deleteRecursively()
+            }
+        }
         AlertDialog.Builder(activity).apply {
             setCancelable(false)
             setTitle("Welcome to Private Server")
@@ -215,7 +227,7 @@ class Hook {
     }
 
     fun TextJSON(melon:String):String{
-        return "{\n\t\"server\": \""+melon+"\",\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
+        return "{\n\t\"server\": \""+melon+"\",\n\t\"remove_il2cpp_folders\": true,\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
     }
 
     private fun RenameJSON(){
@@ -274,8 +286,6 @@ class Hook {
     private fun tryhook(){
         hook()
         sslHook()
-        val z3ro = File(file_json)
-        val z3roJson = JSONObject(z3ro.readText())
         if (z3roJson.getString("showText") != "false") {
             showText()
         } else {
