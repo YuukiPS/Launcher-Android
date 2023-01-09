@@ -235,8 +235,8 @@ class Hook {
 
     // Move all folders name "Files" to "Backup", and move it back to "Files"
     private fun fix() {
-        val backup = File("${path}/files/Backup")
-        val files = File("${path}/files/Files")
+        val backup = File("${path}/backup")
+        val files = File("${path}/files")
         if (backup.exists()) {
             backup.deleteRecursively()
         }
