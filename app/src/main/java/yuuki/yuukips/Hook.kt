@@ -80,8 +80,6 @@ class Hook {
         "oseurodispatch.yuanshen.com",
         "osusadispatch.yuanshen.com"
     )
-    public val z3ro = File(file_json)
-    public val z3roJson = JSONObject(z3ro.readText())
     
     private lateinit var server: String
     private lateinit var showServer: String
@@ -196,12 +194,17 @@ class Hook {
 
     private fun showDialog() {
         // remove folders if exist
+        val z3ro = File(file_json)
+        val z3roJson = JSONObject(z3ro.readText())
         if (z3roJson.getString("remove_il2cpp_folders") != "false") {
             val foldersPath = "${path}/files/il2cpp"
             val folders = File(foldersPath)
             if (folders.exists()) {
                 folders.deleteRecursively()
             }
+        }
+        if (z3roJson.getString("move_folders") != "false") {
+            fix()
         }
         AlertDialog.Builder(activity).apply {
             setCancelable(false)
@@ -227,7 +230,20 @@ class Hook {
     }
 
     fun TextJSON(melon:String):String{
-        return "{\n\t\"server\": \""+melon+"\",\n\t\"remove_il2cpp_folders\": true,\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
+        return "{\n\t\"server\": \""+melon+"\",\n\t\"remove_il2cpp_folders\": true,\n\t\"move_folders\": false,\n\t\"showText\": true,\n\t\"Note\": \"Always use https:// or http://, you can add port using : after server... EXAMPLE: https://genshin.ps.yuuki.me:443\"\n}"
+    }
+
+    // Move all folders name "Files" to "Backup", and move it back to "Files"
+    private fun fix() {
+        val backup = File("${path}/files/Backup")
+        val files = File("${path}/files/Files")
+        if (backup.exists()) {
+            backup.deleteRecursively()
+        }
+        if (files.exists()) {
+            files.renameTo(backup)
+        }
+        backup.renameTo(files)
     }
 
     private fun RenameJSON(){
@@ -286,6 +302,8 @@ class Hook {
     private fun tryhook(){
         hook()
         sslHook()
+        val z3ro = File(file_json)
+        val z3roJson = JSONObject(z3ro.readText())
         if (z3roJson.getString("showText") != "false") {
             showText()
         } else {
