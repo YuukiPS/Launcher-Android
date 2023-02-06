@@ -2,7 +2,7 @@
 .gradle
 .idea
 .DS_Store
-/build
+build
 /captures
 /app/debug
 /app/build
@@ -11,3 +11,4 @@
 local.properties
 apk
 *.apk
+app/bin
