@@ -18,8 +18,6 @@ import javax.net.ssl.*
 
 class Hook {
 
-    // Nama Package
-    private val package_apk = "com.miHoYo.Yuanshen"
     //  List Proxy
     private val proxyListRegex =
             arrayListOf(
@@ -127,7 +125,8 @@ class Hook {
 
         XposedBridge.log("Load: " + lpparam.packageName)
 
-        if (lpparam.packageName == "${package_apk}") {
+        // List Support Name Package
+        if (lpparam.packageName == "com.moe.yuukips" || lpparam.packageName == "com.miHoYo.Yuanshen" || lpparam.packageName == "com.miHoYo.GenshinImpact") {
             EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
             server = "https://login.yuuki.me"
             tryhook()
@@ -187,8 +186,6 @@ class Hook {
         // WebView Hook
         arrayListOf(
                         "android.webkit.WebViewClient",
-                        // "cn.sharesdk.framework.g",
-                        // "com.facebook.internal.WebDialog\$DialogWebViewClient",
                         "com.geetest.sdk.dialog.views.GtWebView\$c",
                         "com.miHoYo.sdk.webview.common.view.ContentWebView\$6"
                 )

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="need_module">
-        <item>com.miHoYo.Yuanshen</item>
+        <item>com.moe.yuukips</item>
+        <item>com.miHoYo.Yuanshen</item>        
+        <item>com.miHoYo.GenshinImpact</item>
     </array>
 </resources>
