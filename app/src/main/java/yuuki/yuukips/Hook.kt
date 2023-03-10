@@ -3,7 +3,6 @@ package yuuki.yuukips
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.XModuleResources
-import android.view.WindowManager
 import android.webkit.SslErrorHandler
 import android.widget.*
 import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
@@ -12,47 +11,40 @@ import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.regex.Pattern
 import javax.net.ssl.*
 
 class Hook {
 
+    // App
+    private val package_apk = "com.moe.yuukips32"
+    private val package_apk_real = "com.miHoYo.GenshinImpact"
+    private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
+
+    //  List Domain
+    private val domain = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
+
     //  List Proxy
-    private val proxyListRegex =
+    private val more_domain =
             arrayListOf(
-                    // CN
-                    "dispatchcnglobal.yuanshen.com",
-                    "gameapi-account.mihoyo.com",
-                    "hk4e-sdk-s.mihoyo.com",
-                    "log-upload.mihoyo.com",
-                    "minor-api.mihoyo.com",
-                    "public-data-api.mihoyo.com",
-                    "sdk-static.mihoyo.com",
-                    "webstatic.mihoyo.com",
-                    "user.mihoyo.com",
-                    // Global
-                    "dispatchosglobal.yuanshen.com",
-                    "api-account-os.hoyoverse.com",
-                    "hk4e-sdk-os-s.hoyoverse.com",
-                    "hk4e-sdk-os-static.hoyoverse.com",
-                    "hk4e-sdk-os.hoyoverse.com",
-                    "log-upload-os.hoyoverse.com",
-                    "minor-api-os.hoyoverse.com",
-                    "sdk-os-static.hoyoverse.com",
-                    "sg-public-data-api.hoyoverse.com",
-                    "webstatic.hoyoverse.com",
-                    // List Server
-                    "osasiadispatch.yuanshen.com",
-                    "oseurodispatch.yuanshen.com",
-                    "osusadispatch.yuanshen.com"
+                    // More Domain & log
+                    "overseauspider.yuanshen.com:8888",
             )
 
+    // URL Server
     private lateinit var server: String
 
+    // Modul
     private lateinit var modulePath: String
     private lateinit var moduleRes: XModuleResources
-    private lateinit var windowManager: WindowManager
 
     private val activityList: ArrayList<Activity> = arrayListOf()
     private var activity: Activity
@@ -113,50 +105,42 @@ class Hook {
         TrustMeAlready().initZygote()
 
         // default
-        server = ""
+        server = "https://login.yuuki.me"
     }
-
-    private var startForceUrl = false
-    private var startProxyList = false
-    private lateinit var dialog: LinearLayout
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
     fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
 
-        XposedBridge.log("Load: " + lpparam.packageName)
+        XposedBridge.log("Load: " + lpparam.packageName) // debug
 
-        // List Support Name Package
-        if (lpparam.packageName == "com.moe.yuukips" || lpparam.packageName == "com.miHoYo.Yuanshen" || lpparam.packageName == "com.miHoYo.GenshinImpact") {
-            EzXHelperInit.initHandleLoadPackage(lpparam) // idk what this?
-            server = "https://login.yuuki.me"
-            tryhook()
-        }
+        // Startup Hook
+        EzXHelperInit.initHandleLoadPackage(lpparam)
 
-        findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
+        // find gs
+        findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
-            XposedBridge.log("activity: " + activity.applicationInfo.name)
-        }
 
-        findMethod("com.miHoYo.GetMobileInfo.MainActivity") { name == "onCreate" }.hookBefore {
-                param ->
-            activity = param.thisObject as Activity
-            enter()
+            // Injek Proxy
+            Injek()
+            log_print("Set Injek...")
+
+            // enter
+            Enter()
         }
     }
 
-    private fun tryhook() {
-        hook()
-        sslHook()
+    private fun Injek() {
+        injekhttp()
+        injekssl()
     }
 
-    private fun enter() {
+    private fun Enter() {
         Toast.makeText(activity, "Welcome to YuukiPS", Toast.LENGTH_LONG).show()
-        Toast.makeText(activity, "Don't forget to join our discord.yuuki.me", Toast.LENGTH_LONG)
-                .show()
+        Toast.makeText(activity, "Join our discord.yuuki.me", Toast.LENGTH_LONG).show()
     }
 
     // Bypass HTTPS
-    private fun sslHook() {
+    private fun injekssl() {
         // OkHttp3 Hook
         findMethodOrNull("com.combosdk.lib.third.okhttp3.OkHttpClient\$Builder") { name == "build" }
                 ?.hookBefore {
@@ -186,6 +170,8 @@ class Hook {
         // WebView Hook
         arrayListOf(
                         "android.webkit.WebViewClient",
+                        "cn.sharesdk.framework.g",
+                        "com.facebook.internal.WebDialog\$DialogWebViewClient",
                         "com.geetest.sdk.dialog.views.GtWebView\$c",
                         "com.miHoYo.sdk.webview.common.view.ContentWebView\$6"
                 )
@@ -220,7 +206,7 @@ class Hook {
     }
 
     // Bypass HTTP
-    private fun hook() {
+    private fun injekhttp() {
         findMethod("com.miHoYo.sdk.webview.MiHoYoWebview") {
             name == "load" &&
                     parameterTypes[0] == String::class.java &&
@@ -263,17 +249,69 @@ class Hook {
     // Rename
     private fun replaceUrl(method: XC_MethodHook.MethodHookParam, args: Int) {
 
+        // skip if server if empty
         if (server == "") return
-        if (method.args[args].toString() == "") return
 
-        // XposedBridge.log("old: " + method.args[args].toString())
+        var melon = method.args[args].toString()
 
-        for (list in proxyListRegex) {
+        // skip if string is empty
+        if (melon == "") return
+
+        // skip config areal
+        if (melon.startsWith("[{\"area\":")) return
+
+        // skip for support download game data
+        if (melon.startsWith("autopatchhk.yuanshen.com")) return
+        if (melon.startsWith("autopatchcn.yuanshen.com")) return
+
+        // rename package name
+        /*
+        if (melon.startsWith(package_apk_real)) {
+            method.args[args] = melon.replace(package_apk_real, package_apk)
+            log_print("rename_v1 " + melon + " > " + method.args[args] + " ")
+        }
+        */
+
+        // normal edit 1
+        for (list in more_domain) {
             for (head in arrayListOf("http://", "https://")) {
                 method.args[args] = method.args[args].toString().replace(head + list, server)
+                // log_print("rename_v1 " + melon + " > " + method.args[args])
             }
         }
 
-        // XposedBridge.log("new: " + method.args[args].toString())
+        // normal edit 2
+        val m = domain.matcher(melon)
+        if (m.find()) {
+            method.args[args] = m.replaceAll(server)
+            // log_print("rename_v2 " + melon + " > " + method.args[args])
+        } else {
+            // log_print("skip_rename_v2 " + melon + " > " + method.args[args])
+        }
+    }
+
+    private fun log_print(text: String) {
+        try {
+            // check if file not exist then create it
+            val file = File(activity.getExternalFilesDir(null), "log-yuuki.txt")
+            if (!file.exists()) {
+                file.createNewFile()
+            }
+
+            // write log to file
+            val fileWriter = FileWriter(file, true)
+            val bufferedWriter = BufferedWriter(fileWriter)
+            bufferedWriter.write("[" + SimpleDateFormat("HH:mm:ss").format(Date()) + "] " + text)
+            bufferedWriter.newLine()
+            bufferedWriter.close()
+        } catch (e: IOException) {
+            Toast.makeText(
+                            activity,
+                            "There is no storage space permission, please allow it first",
+                            Toast.LENGTH_LONG
+                    )
+                    .show()
+            activity.finish()
+        }
     }
 }
