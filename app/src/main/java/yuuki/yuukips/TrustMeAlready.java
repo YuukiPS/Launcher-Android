@@ -3,21 +3,13 @@ package yuuki.yuukips;
 import static de.robv.android.xposed.XposedHelpers.*;
 
 import de.robv.android.xposed.XC_MethodReplacement;
-import de.robv.android.xposed.XposedBridge;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class TrustMeAlready {
 
@@ -28,7 +20,6 @@ public class TrustMeAlready {
   private static final Class<?> SSL_RETURN_PARAM_TYPE = X509Certificate.class;
 
   public void initZygote() {
-    int hookedMethods = 0;
 
     for (Method method : findClass(SSL_CLASS_NAME, null).getDeclaredMethods()) {
       if (!checkSSLMethod(method)) {
@@ -52,7 +43,6 @@ public class TrustMeAlready {
         SSL_METHOD_NAME,
         params.toArray()
       );
-      hookedMethods++;
     }
   }
 

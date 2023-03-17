@@ -12,8 +12,8 @@ android {
         applicationId "yuuki.yuukips"
         minSdk = 28
         targetSdk = 32
-        versionCode = 4
-        versionName = "2"
+        versionCode = 5
+        versionName = "5"
 
         ndk {
             abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'

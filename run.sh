@@ -9,9 +9,9 @@ java -jar tool/uber-apk-signer.jar -a app/build/outputs/apk/release/app-release-
 install_to_phone=true
 
 if ($install_to_phone); then
-    file_apk="apk/official/32/gs32-patched.apk"
+    file_apk="apk/official/35/35os-patched.apk"
     file_final="apk/final/YuukiPS_V1_32.apk"
-    file_out="apk/out/gs32-patched-368-lspatched.apk"
+    file_out="apk/out/35os-patched-368-lspatched.apk"
     file_our="app/build/outputs/apk/release/app-release-aligned-debugSigned.apk"
     file_cn="apk/mod_cn/xfk233.genshinproxy.apk"
 

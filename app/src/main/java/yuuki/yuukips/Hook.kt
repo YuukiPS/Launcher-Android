@@ -2,12 +2,10 @@ package yuuki.yuukips
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.res.XModuleResources
 import android.webkit.SslErrorHandler
 import android.widget.*
 import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
 import com.github.kyuubiran.ezxhelper.utils.*
-import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage
@@ -25,27 +23,24 @@ import javax.net.ssl.*
 class Hook {
 
     // App
-    private val package_apk = "com.moe.yuukips32"
+    private val package_apk = "com.moe.yuukips"
     private val package_apk_real = "com.miHoYo.GenshinImpact"
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
 
-    //  List Domain
+    // URL Server
+    private var server = "https://login.yuuki.me"
+
+    //  List Domain v1
     private val domain = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
 
-    //  List Proxy
+    //  List Domain v2
     private val more_domain =
             arrayListOf(
                     // More Domain & log
                     "overseauspider.yuanshen.com:8888",
             )
 
-    // URL Server
-    private lateinit var server: String
-
-    // Modul
-    private lateinit var modulePath: String
-    private lateinit var moduleRes: XModuleResources
-
+    // Activity
     private val activityList: ArrayList<Activity> = arrayListOf()
     private var activity: Activity
         get() {
@@ -99,34 +94,34 @@ class Hook {
         }
     }
 
-    fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
-        modulePath = startupParam.modulePath
-        moduleRes = XModuleResources.createInstance(modulePath, null)
+    fun initZygote() {
         TrustMeAlready().initZygote()
-
-        // default
-        server = "https://login.yuuki.me"
     }
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
-    fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
+    fun handleLoadPackage(i: XC_LoadPackage.LoadPackageParam) {
+        XposedBridge.log("Load: " + i.packageName) // debug
 
-        XposedBridge.log("Load: " + lpparam.packageName) // debug
+        // Ignore other apps
+        if (i.packageName != "${package_apk}") {
+            return
+        }
 
-        // Startup Hook
-        EzXHelperInit.initHandleLoadPackage(lpparam)
+        // Startup
+        EzXHelperInit.initHandleLoadPackage(i)
 
-        // find gs
+        // Hook Activity
         findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
 
-            // Injek Proxy
-            Injek()
-            log_print("Set Injek...")
-
-            // enter
+            // Enter
             Enter()
+
+            // Injek here bed
         }
+
+        // Injek here good
+        Injek()
     }
 
     private fun Injek() {
@@ -170,8 +165,8 @@ class Hook {
         // WebView Hook
         arrayListOf(
                         "android.webkit.WebViewClient",
-                        "cn.sharesdk.framework.g",
-                        "com.facebook.internal.WebDialog\$DialogWebViewClient",
+                        // "cn.sharesdk.framework.g",
+                        // "com.facebook.internal.WebDialog\$DialogWebViewClient",
                         "com.geetest.sdk.dialog.views.GtWebView\$c",
                         "com.miHoYo.sdk.webview.common.view.ContentWebView\$6"
                 )
@@ -257,8 +252,8 @@ class Hook {
         // skip if string is empty
         if (melon == "") return
 
-        // skip config areal
-        if (melon.startsWith("[{\"area\":")) return
+        // skip config areal (BAD 3.5)
+        // if (melon.startsWith("[{\"area\":")) return
 
         // skip for support download game data
         if (melon.startsWith("autopatchhk.yuanshen.com")) return
@@ -301,7 +296,9 @@ class Hook {
             // write log to file
             val fileWriter = FileWriter(file, true)
             val bufferedWriter = BufferedWriter(fileWriter)
-            bufferedWriter.write("[" + SimpleDateFormat("HH:mm:ss").format(Date()) + "] " + text)
+            var mel = "[" + SimpleDateFormat("HH:mm:ss").format(Date()) + "] " + text
+            XposedBridge.log(mel) // debug
+            bufferedWriter.write(mel)
             bufferedWriter.newLine()
             bufferedWriter.close()
         } catch (e: IOException) {

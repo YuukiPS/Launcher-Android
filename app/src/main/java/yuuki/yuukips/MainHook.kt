@@ -6,10 +6,10 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
 
 class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private val hook: Hook = Hook()
-    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        hook.handleLoadPackage(lpparam)
+    override fun handleLoadPackage(i: XC_LoadPackage.LoadPackageParam) {
+        hook.handleLoadPackage(i)
     }
-    override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
-        hook.initZygote(startupParam)
+    override fun initZygote(s: IXposedHookZygoteInit.StartupParam) {
+        hook.initZygote()
     }
 }
