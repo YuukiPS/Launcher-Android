@@ -23,8 +23,10 @@ import javax.net.ssl.*
 class Hook {
 
     // App
-    private val package_apk = "com.yuuki.ysps36"
-    private val package_apk_real = "com.miHoYo.Yuanshen"
+    private val package_apk_os = "com.yuuki.osps36"
+    private val package_apk_cn = "com.yuuki.ysps36"
+    private val package_apk_real_os = "com.miHoYo.GenshinImpact"
+    private val package_apk_real_cn = "com.miHoYo.Yuanshen"
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
 
     // URL Server
@@ -103,25 +105,24 @@ class Hook {
         XposedBridge.log("Load: " + i.packageName) // debug
 
         // Ignore other apps
-        if (i.packageName != "${package_apk}") {
-            return
-        }
+        if (i.packageName == "${package_apk_os}" || i.packageName == "${package_apk_cn}") { 
 
-        // Startup
-        EzXHelperInit.initHandleLoadPackage(i)
+         // Startup
+         EzXHelperInit.initHandleLoadPackage(i)
 
-        // Hook Activity
-        findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
+         // Hook Activity
+         findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
 
             // Enter
             Enter()
 
             // Injek here bed
-        }
+         }
 
-        // Injek here good
-        Injek()
+         // Injek here good
+         Injek()
+    }
     }
 
     private fun Injek() {
@@ -262,10 +263,10 @@ class Hook {
         if (melon.startsWith("autopatchhk.yuanshen.com")) return
         if (melon.startsWith("autopatchcn.yuanshen.com")) return
 
-        // rename package name
+        // rename package name (os)
         /*
-        if (melon.startsWith(package_apk_real)) {
-            method.args[args] = melon.replace(package_apk_real, package_apk)
+        if (melon.startsWith(package_apk_real_os)) {
+            method.args[args] = melon.replace(package_apk_real_os, package_apk_os)
             log_print("rename_v1 " + melon + " > " + method.args[args] + " ")
         }
         */
