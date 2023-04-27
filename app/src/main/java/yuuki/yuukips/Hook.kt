@@ -23,8 +23,8 @@ import javax.net.ssl.*
 class Hook {
 
     // App
-    private val package_apk = "com.moe.yuukips"
-    private val package_apk_real = "com.miHoYo.GenshinImpact"
+    private val package_apk = "com.yuuki.ysps36"
+    private val package_apk_real = "com.miHoYo.Yuanshen"
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
 
     // URL Server
@@ -130,6 +130,7 @@ class Hook {
     }
 
     private fun Enter() {
+        Toast.makeText(activity, "Mod APK from mihoyu.cn", Toast.LENGTH_LONG).show()
         Toast.makeText(activity, "Welcome to YuukiPS", Toast.LENGTH_LONG).show()
         Toast.makeText(activity, "Join our discord.yuuki.me", Toast.LENGTH_LONG).show()
     }
@@ -247,10 +248,12 @@ class Hook {
         // skip if server if empty
         if (server == "") return
 
+        if (method.args[args] == null) return
         var melon = method.args[args].toString()
-
         // skip if string is empty
         if (melon == "") return
+
+        // log_print("URL: " + melon)
 
         // skip config areal (BAD 3.5)
         // if (melon.startsWith("[{\"area\":")) return
