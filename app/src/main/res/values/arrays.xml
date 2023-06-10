@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="need_module">
-        <item>com.yuuki.osps36</item>
-        <item>com.yuuki.ysps36</item>
+        <item>com.yuukips.gsos</item>
+        <item>com.yuukips.gsys</item>
     </array>
 </resources>

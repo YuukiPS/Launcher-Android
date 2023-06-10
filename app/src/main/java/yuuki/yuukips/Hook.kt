@@ -23,14 +23,14 @@ import javax.net.ssl.*
 class Hook {
 
     // App
-    private val package_apk_os = "com.yuuki.osps36"
-    private val package_apk_cn = "com.yuuki.ysps36"
+    private val package_apk_os = "com.yuukips.gsos"
+    private val package_apk_cn = "com.yuukips.gsys"
     private val package_apk_real_os = "com.miHoYo.GenshinImpact"
     private val package_apk_real_cn = "com.miHoYo.Yuanshen"
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
 
     // URL Server
-    private var server = "https://login.yuuki.me"
+    private var server = "https://ps.yuuki.me"
 
     //  List Domain v1
     private val domain = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")

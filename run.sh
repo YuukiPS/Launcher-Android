@@ -10,9 +10,9 @@ auto=true
 install_to_phone=true
 
 if ($auto); then
-    file_apk="apk/official/36/os36/dist/os36.apk"
-    file_final="apk/final/YuukiPS_V1_36.apk"
-    file_out="apk/out/os36-368-lspatched.apk"
+    file_apk="apk/official/37/ys/37/dist/37.apk"
+    file_final="apk/final/YuukiPS_YS_37.apk"
+    file_out="apk/out/37-368-lspatched.apk"
     file_our="app/build/outputs/apk/release/app-release-aligned-debugSigned.apk"
     file_cn="apk/mod/36/xfk233.genshinproxy.apk"
 
