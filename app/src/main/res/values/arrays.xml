@@ -2,6 +2,6 @@
 <resources>
     <array name="need_module">
         <item>com.yuukips.gsos</item>
-        <item>com.yuukips.gsys</item>
+        <item>com.yuukips.gscn</item>
     </array>
 </resources>

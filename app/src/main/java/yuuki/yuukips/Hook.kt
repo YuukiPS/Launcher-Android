@@ -24,7 +24,7 @@ class Hook {
 
     // App
     private val package_apk_os = "com.yuukips.gsos"
-    private val package_apk_cn = "com.yuukips.gsys"
+    private val package_apk_cn = "com.yuukips.gscn"
     private val package_apk_real_os = "com.miHoYo.GenshinImpact"
     private val package_apk_real_cn = "com.miHoYo.Yuanshen"
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
@@ -38,8 +38,9 @@ class Hook {
     //  List Domain v2
     private val more_domain =
             arrayListOf(
-                    // More Domain & log
-                    "overseauspider.yuanshen.com:8888",
+                    "overseauspider.yuanshen.com:8888", // LOG OS
+                    "uspider.yuanshen.com:8888", // LOG CN
+                    "log-upload.mihoyo.com"
             )
 
     // Activity
