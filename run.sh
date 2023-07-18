@@ -12,7 +12,7 @@ install_to_phone=true
 if ($auto); then
     file_apk="apk/official/sr/110/os.apk"
     file_final="apk/final/sr_110_os.apk"
-    file_out="apk/out/sr_110_os-368-lspatched.apk"
+    file_out="apk/out/os-368-lspatched.apk"
     file_our="app/build/outputs/apk/release/app-release-aligned-debugSigned.apk"
     file_cn="apk/mod/36/xfk233.genshinproxy.apk"
 

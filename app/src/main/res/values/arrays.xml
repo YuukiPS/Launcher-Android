@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="need_module">
-        <item>com.yuukips.gsos</item>
-        <item>com.yuukips.gsys</item>
+        <item>com.HoYoverse.hkrpgoversea</item>
     </array>
 </resources>

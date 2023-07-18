@@ -9,36 +9,42 @@ import com.github.kyuubiran.ezxhelper.utils.*
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileWriter
 import java.io.IOException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.regex.Pattern
 import javax.net.ssl.*
 
 class Hook {
 
     // App
-    private val package_apk_os = "com.yuukips.gsos"
-    private val package_apk_cn = "com.yuukips.gsys"
-    private val package_apk_real_os = "com.miHoYo.GenshinImpact"
-    private val package_apk_real_cn = "com.miHoYo.Yuanshen"
-    private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
+    private val package_apk_os = "com.HoYoverse.hkrpgoversea"
+    private val package_apk_real_os = "com.HoYoverse.hkrpgoversea"
 
     // URL Server
     private var server = "https://ps.yuuki.me"
 
     //  List Domain v1
-    private val domain = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob)\\.com")
+    private val domain = Pattern.compile("http(s|)://.*?\\.(hoyoverse|mihoyo|yuanshen|mob|starrails)\\.com")
 
     //  List Domain v2
     private val more_domain =
             arrayListOf(
                     // More Domain & log
+                    "globaldp-prod-os01.starrails.com",
+                    "prod-official-eur-dp01.starrails.com",
+                    "prod-official-usa-dp01.starrails.com",
+                    "prod-official-asia-dp01.starrails.com",
+                    "minor-api-os.hoyoverse.com",
+                    "sdk-os-static.hoyoverse.com",
+                    "hkrpg-sdk-os-static.hoyoverse.com",
+                    "sdk-os-static.hoyoverse.com",
+                    "webstatic.hoyoverse.com",
+                    "sdk-os-static.hoyoverse.com",
+                    "sg-hkrpg-api.hoyoverse.com",
+                    "log-upload-os.hoyoverse.com",
+                    "sg-public-data-api.hoyoverse.com",
+                    "sdk-common-static.hoyoverse.com",
                     "overseauspider.yuanshen.com:8888",
             )
 
@@ -102,38 +108,16 @@ class Hook {
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
     fun handleLoadPackage(i: XC_LoadPackage.LoadPackageParam) {
-        XposedBridge.log("Load: " + i.packageName) // debug
-
+        XposedBridge.log("Load: " + i.packageName)
         // Ignore other apps
-        if (i.packageName == "${package_apk_os}" || i.packageName == "${package_apk_cn}") { 
-
-         // Startup
-         EzXHelperInit.initHandleLoadPackage(i)
-
-         // Hook Activity
-         findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
-            activity = param.thisObject as Activity
-
-            // Enter
-            Enter()
-
-            // Injek here bed
-         }
-
-         // Injek here good
-         Injek()
-    }
-    }
-
-    private fun Injek() {
-        injekhttp()
-        injekssl()
-    }
-
-    private fun Enter() {
-        Toast.makeText(activity, "Mod APK from mihoyu.cn", Toast.LENGTH_LONG).show()
-        Toast.makeText(activity, "Welcome to YuukiPS", Toast.LENGTH_LONG).show()
-        Toast.makeText(activity, "Join our discord.yuuki.me", Toast.LENGTH_LONG).show()
+        if (i.packageName == "com.HoYoverse.hkrpgoversea") {
+            EzXHelperInit.initHandleLoadPackage(i)
+            findMethod(Activity::class.java, true) { name == "onCreate" }.hookBefore { param ->
+                activity = param.thisObject as Activity
+            }
+            injekhttp()
+            injekssl()
+        }
     }
 
     // Bypass HTTPS
@@ -254,23 +238,6 @@ class Hook {
         // skip if string is empty
         if (melon == "") return
 
-        // log_print("URL: " + melon)
-
-        // skip config areal (BAD 3.5)
-        // if (melon.startsWith("[{\"area\":")) return
-
-        // skip for support download game data
-        if (melon.startsWith("autopatchhk.yuanshen.com")) return
-        if (melon.startsWith("autopatchcn.yuanshen.com")) return
-
-        // rename package name (os)
-        /*
-        if (melon.startsWith(package_apk_real_os)) {
-            method.args[args] = melon.replace(package_apk_real_os, package_apk_os)
-            log_print("rename_v1 " + melon + " > " + method.args[args] + " ")
-        }
-        */
-
         // normal edit 1
         for (list in more_domain) {
             for (head in arrayListOf("http://", "https://")) {
@@ -291,28 +258,9 @@ class Hook {
 
     private fun log_print(text: String) {
         try {
-            // check if file not exist then create it
-            val file = File(activity.getExternalFilesDir(null), "log-yuuki.txt")
-            if (!file.exists()) {
-                file.createNewFile()
-            }
-
-            // write log to file
-            val fileWriter = FileWriter(file, true)
-            val bufferedWriter = BufferedWriter(fileWriter)
-            var mel = "[" + SimpleDateFormat("HH:mm:ss").format(Date()) + "] " + text
-            XposedBridge.log(mel) // debug
-            bufferedWriter.write(mel)
-            bufferedWriter.newLine()
-            bufferedWriter.close()
+            XposedBridge.log(text)
         } catch (e: IOException) {
-            Toast.makeText(
-                            activity,
-                            "There is no storage space permission, please allow it first",
-                            Toast.LENGTH_LONG
-                    )
-                    .show()
-            activity.finish()
+            // skip
         }
     }
 }
