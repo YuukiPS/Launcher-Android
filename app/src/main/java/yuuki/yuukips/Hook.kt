@@ -23,10 +23,14 @@ import javax.net.ssl.*
 class Hook {
 
     // App
-    private val package_apk_os = "com.yuukips.gsos"
-    private val package_apk_cn = "com.yuukips.gscn"
-    private val package_apk_real_os = "com.miHoYo.GenshinImpact"
-    private val package_apk_real_cn = "com.miHoYo.Yuanshen"
+    private val package_apk =
+            listOf(
+                    "com.yuukips.gsos",
+                    "com.yuukips.gscn",
+                    "com.yuuki.gi40cn",
+                    "com.miHoYo.GenshinImpact",
+                    "com.miHoYo.Yuanshen"
+            )
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
 
     // URL Server
@@ -106,24 +110,25 @@ class Hook {
         XposedBridge.log("Load: " + i.packageName) // debug
 
         // Ignore other apps
-        if (i.packageName == "${package_apk_os}" || i.packageName == "${package_apk_cn}") { 
+        if (i.packageName !in package_apk) {
+            return
+        }
 
-         // Startup
-         EzXHelperInit.initHandleLoadPackage(i)
+        // Startup
+        EzXHelperInit.initHandleLoadPackage(i)
 
-         // Hook Activity
-         findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
+        // Hook Activity
+        findMethod(injek_activity) { name == "onCreate" }.hookBefore { param ->
             activity = param.thisObject as Activity
 
             // Enter
             Enter()
 
             // Injek here bed
-         }
+        }
 
-         // Injek here good
-         Injek()
-    }
+        // Injek here good
+        Injek()
     }
 
     private fun Injek() {
